@@ -64,38 +64,70 @@ jobs:
           echo "Image: $IMAGE_URI"
 
           echo "Logging in to ECR"
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+          aws ecr get-login-password \
+            --region $AWS_REGION | \
+            docker login \
+            --username AWS \
+            --password-stdin $ECR_REGISTRY
 
           echo "Pulling Docker image"
+
           docker pull $IMAGE_URI
 
           echo "Reading database secret"
+
           SECRET_JSON=\$(aws secretsmanager get-secret-value \
             --secret-id cloudright/woocommerce/database \
             --region $AWS_REGION \
             --query SecretString \
             --output text)
 
-          DB_HOST=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["host"])')
-          DB_USER=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["username"])')
-          DB_PASSWORD=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
-          DB_NAME=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
+          DB_HOST=\$(printf '%s' "\$SECRET_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["host"])')
+
+          DB_USER=\$(printf '%s' "\$SECRET_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["username"])')
+
+          DB_PASSWORD=\$(printf '%s' "\$SECRET_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
+
+          DB_NAME=\$(printf '%s' "\$SECRET_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
 
           echo "Reading WordPress authentication secret"
+
           WP_AUTH_JSON=\$(aws secretsmanager get-secret-value \
             --secret-id cloudright/woocommerce/wordpress-auth \
             --region $AWS_REGION \
             --query SecretString \
             --output text)
 
-          AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_KEY"])')
-          SECURE_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_KEY"])')
-          LOGGED_IN_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_KEY"])')
-          NONCE_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_KEY"])')
-          AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_SALT"])')
-          SECURE_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_SALT"])')
-          LOGGED_IN_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_SALT"])')
-          NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
+          AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_KEY"])')
+
+          SECURE_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_KEY"])')
+
+          LOGGED_IN_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_KEY"])')
+
+          NONCE_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_KEY"])')
+
+          AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_SALT"])')
+
+          SECURE_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_SALT"])')
+
+          LOGGED_IN_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_SALT"])')
+
+          NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
+
+          echo "Preparing WordPress configuration"
 
           WP_AUTH_EXTRA=\$(cat <<PHP
           define('AUTH_KEY', '\$AUTH_KEY');
@@ -107,9 +139,7 @@ jobs:
           define('LOGGED_IN_SALT', '\$LOGGED_IN_SALT');
           define('NONCE_SALT', '\$NONCE_SALT');
 
-          if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) {
-              \$_SERVER["HTTPS"] = "on";
-          }
+          \$_SERVER['HTTPS'] = 'on';
           PHP
           )
 
@@ -169,6 +199,7 @@ jobs:
           unset DB_USER
           unset DB_PASSWORD
           unset DB_NAME
+
           unset WP_AUTH_JSON
           unset AUTH_KEY
           unset SECURE_AUTH_KEY
