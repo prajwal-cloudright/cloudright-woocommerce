@@ -1,4 +1,4 @@
-name: Build and Push WooCommerce Image
+name: Build, Push and Deploy WooCommerce
 
 on:
   push:
@@ -12,9 +12,10 @@ permissions:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: cloudright-woocommerce
+  EC2_INSTANCE_ID: i-0a1b8aedd54049f01
 
 jobs:
-  build-and-push:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,8 +38,8 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
             .
 
       - name: Push Docker image
@@ -46,5 +47,158 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+      - name: Deploy image to EC2 through SSM
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+          DEPLOY_SCRIPT=$(cat <<SCRIPT
+          set -e
+
+          echo "Starting deployment"
+          echo "Image: $IMAGE_URI"
+
+          echo "Logging in to ECR"
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+          echo "Pulling Docker image"
+          docker pull $IMAGE_URI
+
+          echo "Reading database secret"
+          SECRET_JSON=\$(aws secretsmanager get-secret-value \
+            --secret-id cloudright/woocommerce/database \
+            --region $AWS_REGION \
+            --query SecretString \
+            --output text)
+
+          DB_HOST=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["host"])')
+          DB_USER=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["username"])')
+          DB_PASSWORD=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
+          DB_NAME=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
+
+          echo "Starting temporary new container"
+
+          docker rm -f woocommerce-cloudright-new 2>/dev/null || true
+
+          docker run -d \
+            --name woocommerce-cloudright-new \
+            --restart unless-stopped \
+            -p 127.0.0.1:8081:80 \
+            -e WORDPRESS_DB_HOST="\$DB_HOST:3306" \
+            -e WORDPRESS_DB_USER="\$DB_USER" \
+            -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
+            -e WORDPRESS_DB_NAME="\$DB_NAME" \
+            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
+            -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
+            "$IMAGE_URI"
+
+          echo "Waiting for new container"
+
+          sleep 8
+
+          echo "Checking new container"
+
+          curl -f -s \
+            -H 'Host: glomore.in' \
+            -H 'X-Forwarded-Proto: https' \
+            http://127.0.0.1:8081/wp-json/ > /dev/null
+
+          echo "New container is healthy"
+
+          echo "Stopping old production container"
+
+          docker rm -f woocommerce-cloudright 2>/dev/null || true
+
+          echo "Starting new container on production port"
+
+          docker rename woocommerce-cloudright-new woocommerce-cloudright-temp
+
+          docker run -d \
+            --name woocommerce-cloudright \
+            --restart unless-stopped \
+            -p 127.0.0.1:8080:80 \
+            -e WORDPRESS_DB_HOST="\$DB_HOST:3306" \
+            -e WORDPRESS_DB_USER="\$DB_USER" \
+            -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
+            -e WORDPRESS_DB_NAME="\$DB_NAME" \
+            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
+            -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
+            "$IMAGE_URI"
+
+          echo "Removing temporary container"
+
+          docker rm -f woocommerce-cloudright-temp 2>/dev/null || true
+          docker rm -f woocommerce-cloudright-new 2>/dev/null || true
+
+          unset SECRET_JSON
+          unset DB_HOST
+          unset DB_USER
+          unset DB_PASSWORD
+          unset DB_NAME
+
+          echo "Deployment completed successfully"
+          SCRIPT
+          )
+
+          ENCODED_SCRIPT=$(printf '%s' "$DEPLOY_SCRIPT" | base64 -w 0)
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[\"echo '$ENCODED_SCRIPT' | base64 -d | bash\"]" \
+            --region "$AWS_REGION" \
+            --query 'Command.CommandId' \
+            --output text)
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          for i in {1..30}; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --region "$AWS_REGION" \
+              --query 'Status' \
+              --output text)
+
+            echo "Deployment status: $STATUS"
+
+            case "$STATUS" in
+              Success)
+                echo "Deployment succeeded."
+
+                aws ssm get-command-invocation \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --region "$AWS_REGION" \
+                  --query 'StandardOutputContent' \
+                  --output text
+
+                exit 0
+                ;;
+
+              Failed|Cancelled|TimedOut|Cancelling)
+                echo "Deployment failed."
+
+                aws ssm get-command-invocation \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --region "$AWS_REGION" \
+                  --query '{Output:StandardOutputContent,Error:StandardErrorContent}' \
+                  --output yaml
+
+                exit 1
+                ;;
+
+              *)
+                sleep 10
+                ;;
+            esac
+          done
+
+          echo "Deployment timed out while waiting for SSM."
+          exit 1
