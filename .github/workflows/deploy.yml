@@ -128,20 +128,6 @@ jobs:
           NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
             python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
 
-          echo "Preparing WordPress authentication configuration"
-
-          WP_AUTH_EXTRA=\$(cat <<PHP
-          define('AUTH_KEY', '\$AUTH_KEY');
-          define('SECURE_AUTH_KEY', '\$SECURE_AUTH_KEY');
-          define('LOGGED_IN_KEY', '\$LOGGED_IN_KEY');
-          define('NONCE_KEY', '\$NONCE_KEY');
-          define('AUTH_SALT', '\$AUTH_SALT');
-          define('SECURE_AUTH_SALT', '\$SECURE_AUTH_SALT');
-          define('LOGGED_IN_SALT', '\$LOGGED_IN_SALT');
-          define('NONCE_SALT', '\$NONCE_SALT');
-          PHP
-          )
-
           echo "Starting temporary new container"
 
           docker rm -f woocommerce-cloudright-new 2>/dev/null || true
@@ -154,7 +140,15 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_CONFIG_EXTRA="\$WP_AUTH_EXTRA" \
+            -e WORDPRESS_AUTH_KEY="\$AUTH_KEY" \
+            -e WORDPRESS_SECURE_AUTH_KEY="\$SECURE_AUTH_KEY" \
+            -e WORDPRESS_LOGGED_IN_KEY="\$LOGGED_IN_KEY" \
+            -e WORDPRESS_NONCE_KEY="\$NONCE_KEY" \
+            -e WORDPRESS_AUTH_SALT="\$AUTH_SALT" \
+            -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
+            -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
+            -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
+            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
 
@@ -185,7 +179,15 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_CONFIG_EXTRA="\$WP_AUTH_EXTRA" \
+            -e WORDPRESS_AUTH_KEY="\$AUTH_KEY" \
+            -e WORDPRESS_SECURE_AUTH_KEY="\$SECURE_AUTH_KEY" \
+            -e WORDPRESS_LOGGED_IN_KEY="\$LOGGED_IN_KEY" \
+            -e WORDPRESS_NONCE_KEY="\$NONCE_KEY" \
+            -e WORDPRESS_AUTH_SALT="\$AUTH_SALT" \
+            -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
+            -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
+            -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
+            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
 
@@ -208,7 +210,6 @@ jobs:
           unset SECURE_AUTH_SALT
           unset LOGGED_IN_SALT
           unset NONCE_SALT
-          unset WP_AUTH_EXTRA
 
           echo "Deployment completed successfully"
           SCRIPT
