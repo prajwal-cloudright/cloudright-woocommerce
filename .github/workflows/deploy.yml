@@ -1,3 +1,4 @@
+
 name: Build, Push and Deploy WooCommerce
 
 on:
@@ -127,7 +128,7 @@ jobs:
           NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
             python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
 
-          echo "Preparing WordPress configuration"
+          echo "Preparing WordPress authentication configuration"
 
           WP_AUTH_EXTRA=\$(cat <<PHP
           define('AUTH_KEY', '\$AUTH_KEY');
@@ -138,8 +139,6 @@ jobs:
           define('SECURE_AUTH_SALT', '\$SECURE_AUTH_SALT');
           define('LOGGED_IN_SALT', '\$LOGGED_IN_SALT');
           define('NONCE_SALT', '\$NONCE_SALT');
-
-          \$_SERVER['HTTPS'] = 'on';
           PHP
           )
 
@@ -272,3 +271,4 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
+
