@@ -81,6 +81,38 @@ jobs:
           DB_PASSWORD=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
           DB_NAME=\$(printf '%s' "\$SECRET_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
 
+          echo "Reading WordPress authentication secret"
+          WP_AUTH_JSON=\$(aws secretsmanager get-secret-value \
+            --secret-id cloudright/woocommerce/wordpress-auth \
+            --region $AWS_REGION \
+            --query SecretString \
+            --output text)
+
+          AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_KEY"])')
+          SECURE_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_KEY"])')
+          LOGGED_IN_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_KEY"])')
+          NONCE_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_KEY"])')
+          AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_SALT"])')
+          SECURE_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_SALT"])')
+          LOGGED_IN_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_SALT"])')
+          NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
+
+          WP_AUTH_EXTRA=\$(cat <<PHP
+          define('AUTH_KEY', '\$AUTH_KEY');
+          define('SECURE_AUTH_KEY', '\$SECURE_AUTH_KEY');
+          define('LOGGED_IN_KEY', '\$LOGGED_IN_KEY');
+          define('NONCE_KEY', '\$NONCE_KEY');
+          define('AUTH_SALT', '\$AUTH_SALT');
+          define('SECURE_AUTH_SALT', '\$SECURE_AUTH_SALT');
+          define('LOGGED_IN_SALT', '\$LOGGED_IN_SALT');
+          define('NONCE_SALT', '\$NONCE_SALT');
+
+          if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) {
+              \$_SERVER["HTTPS"] = "on";
+          }
+          PHP
+          )
+
           echo "Starting temporary new container"
 
           docker rm -f woocommerce-cloudright-new 2>/dev/null || true
@@ -93,7 +125,7 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
+            -e WORDPRESS_CONFIG_EXTRA="\$WP_AUTH_EXTRA" \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
 
@@ -116,8 +148,6 @@ jobs:
 
           echo "Starting new container on production port"
 
-          docker rename woocommerce-cloudright-new woocommerce-cloudright-temp
-
           docker run -d \
             --name woocommerce-cloudright \
             --restart unless-stopped \
@@ -126,13 +156,12 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
+            -e WORDPRESS_CONFIG_EXTRA="\$WP_AUTH_EXTRA" \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
 
           echo "Removing temporary container"
 
-          docker rm -f woocommerce-cloudright-temp 2>/dev/null || true
           docker rm -f woocommerce-cloudright-new 2>/dev/null || true
 
           unset SECRET_JSON
@@ -140,6 +169,16 @@ jobs:
           unset DB_USER
           unset DB_PASSWORD
           unset DB_NAME
+          unset WP_AUTH_JSON
+          unset AUTH_KEY
+          unset SECURE_AUTH_KEY
+          unset LOGGED_IN_KEY
+          unset NONCE_KEY
+          unset AUTH_SALT
+          unset SECURE_AUTH_SALT
+          unset LOGGED_IN_SALT
+          unset NONCE_SALT
+          unset WP_AUTH_EXTRA
 
           echo "Deployment completed successfully"
           SCRIPT
