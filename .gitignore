@@ -8,4 +8,7 @@
 node_modules/
 vendor/
 
+!wp-content/plugins/woocommerce/vendor/
+!wp-content/plugins/woocommerce/vendor/**
+
 wp-content/uploads/
