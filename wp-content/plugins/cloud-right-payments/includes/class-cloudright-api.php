@@ -12,6 +12,43 @@ class CloudRight_API {
 	 */
 	public function register_routes() {
 
+		/**
+		 * -------------------------------------------------------
+		 * Create Account
+		 * -------------------------------------------------------
+		 */
+		register_rest_route(
+			'cloudright/v1',
+			'/create-account',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'create_account' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+
+		/**
+		 * -------------------------------------------------------
+		 * Login
+		 * -------------------------------------------------------
+		 */
+		register_rest_route(
+			'cloudright/v1',
+			'/login',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'login' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+
+		/**
+		 * -------------------------------------------------------
+		 * Create Order
+		 * -------------------------------------------------------
+		 */
 		register_rest_route(
 			'cloudright/v1',
 			'/create-order',
@@ -25,8 +62,317 @@ class CloudRight_API {
 
 
 	/**
-	 * Create WooCommerce order after successful
+	 * ---------------------------------------------------------------
+	 * CREATE ACCOUNT
+	 * ---------------------------------------------------------------
+	 *
+	 * Creates a WooCommerce customer using:
+	 *
+	 * First Name
+	 * Last Name
+	 * Email
+	 *
+	 * No password is requested in the CloudRight UI.
+	 */
+	public function create_account( WP_REST_Request $request ) {
+
+		/**
+		 * Make sure WooCommerce is available.
+		 */
+		if ( ! function_exists( 'wc_create_new_customer' ) ) {
+
+			return new WP_Error(
+				'woocommerce_missing',
+				'WooCommerce is not available.',
+				array(
+					'status' => 500,
+				)
+			);
+		}
+
+
+		/**
+		 * Get request data.
+		 */
+		$data = $request->get_json_params();
+
+		if ( ! is_array( $data ) ) {
+
+			return new WP_Error(
+				'invalid_request',
+				'Invalid request data.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Get customer information.
+		 */
+		$first_name = isset( $data['first_name'] )
+			? sanitize_text_field( $data['first_name'] )
+			: '';
+
+		$last_name = isset( $data['last_name'] )
+			? sanitize_text_field( $data['last_name'] )
+			: '';
+
+		$email = isset( $data['email'] )
+			? sanitize_email( $data['email'] )
+			: '';
+
+
+		/**
+		 * Validate first name.
+		 */
+		if ( empty( $first_name ) ) {
+
+			return new WP_Error(
+				'first_name_required',
+				'First name is required.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Validate last name.
+		 */
+		if ( empty( $last_name ) ) {
+
+			return new WP_Error(
+				'last_name_required',
+				'Last name is required.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Validate email.
+		 */
+		if ( empty( $email ) || ! is_email( $email ) ) {
+
+			return new WP_Error(
+				'invalid_email',
+				'Please enter a valid email address.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Normalize email.
+		 */
+		$email = strtolower( trim( $email ) );
+
+
+		/**
+		 * Check whether email already exists.
+		 */
+		$existing_user = get_user_by(
+			'email',
+			$email
+		);
+
+		if ( $existing_user ) {
+
+			return new WP_Error(
+				'account_exists',
+				'An account with this email already exists. Please use Login.',
+				array(
+					'status' => 409,
+				)
+			);
+		}
+
+
+		/**
+		 * Create WooCommerce customer.
+		 *
+		 * A random password is generated internally.
+		 * The customer does not need to enter a password
+		 * through the CloudRight checkout UI.
+		 */
+		$customer_id = wc_create_new_customer(
+			$email,
+			'',
+			'',
+			array(
+				'first_name' => $first_name,
+				'last_name'  => $last_name,
+			)
+		);
+
+
+		/**
+		 * Check creation result.
+		 */
+		if ( is_wp_error( $customer_id ) ) {
+
+			return new WP_Error(
+				'account_creation_failed',
+				$customer_id->get_error_message(),
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Get created user.
+		 */
+		$user = get_user_by(
+			'id',
+			$customer_id
+		);
+
+
+		/**
+		 * Return success.
+		 */
+		return rest_ensure_response(
+			array(
+				'success'     => true,
+				'message'     => 'Account created successfully.',
+				'customer_id' => $customer_id,
+				'email'       => $user
+					? $user->user_email
+					: $email,
+				'first_name'  => $first_name,
+				'last_name'   => $last_name,
+			)
+		);
+	}
+
+
+	/**
+	 * ---------------------------------------------------------------
+	 * LOGIN
+	 * ---------------------------------------------------------------
+	 *
+	 * Checks whether a WooCommerce/WordPress customer exists
+	 * with the supplied email.
+	 *
+	 * No password is requested by the CloudRight UI.
+	 */
+	public function login( WP_REST_Request $request ) {
+
+		/**
+		 * Get request data.
+		 */
+		$data = $request->get_json_params();
+
+		if ( ! is_array( $data ) ) {
+
+			return new WP_Error(
+				'invalid_request',
+				'Invalid request data.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Get email.
+		 */
+		$email = isset( $data['email'] )
+			? sanitize_email( $data['email'] )
+			: '';
+
+
+		/**
+		 * Validate email.
+		 */
+		if ( empty( $email ) || ! is_email( $email ) ) {
+
+			return new WP_Error(
+				'invalid_email',
+				'Please enter a valid email address.',
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Normalize email.
+		 */
+		$email = strtolower( trim( $email ) );
+
+
+		/**
+		 * Find WordPress user by email.
+		 */
+		$user = get_user_by(
+			'email',
+			$email
+		);
+
+
+		/**
+		 * Account not found.
+		 */
+		if ( ! $user ) {
+
+			return new WP_Error(
+				'account_not_found',
+				'No account found with this email. Please create an account first.',
+				array(
+					'status' => 404,
+				)
+			);
+		}
+
+
+		/**
+		 * Return customer information.
+		 */
+		return rest_ensure_response(
+			array(
+				'success'     => true,
+				'message'     => 'Login successful.',
+				'customer_id' => $user->ID,
+				'email'       => $user->user_email,
+				'first_name'  => get_user_meta(
+					$user->ID,
+					'first_name',
+					true
+				),
+				'last_name'   => get_user_meta(
+					$user->ID,
+					'last_name',
+					true
+				),
+			)
+		);
+	}
+
+
+	/**
+	 * ---------------------------------------------------------------
+	 * CREATE ORDER
+	 * ---------------------------------------------------------------
+	 *
+	 * Creates WooCommerce order after successful
 	 * CloudRight dummy payment.
+	 *
+	 * The customer may not have a normal WordPress login session.
+	 * Therefore the customer_id/customer_email/customer name sent
+	 * from the CloudRight checkout are used to associate the order
+	 * with the WooCommerce customer.
 	 */
 	public function create_order( WP_REST_Request $request ) {
 
@@ -78,11 +424,118 @@ class CloudRight_API {
 
 
 		/**
+		 * -------------------------------------------------------
+		 * Customer information
+		 * -------------------------------------------------------
+		 *
+		 * The frontend sends customer information after
+		 * successful CloudRight Login/Create Account.
+		 */
+		$customer_id = 0;
+
+		if ( isset( $data['customer_id'] ) ) {
+
+			$customer_id = absint(
+				$data['customer_id']
+			);
+		}
+
+
+		$customer_email = '';
+
+		if ( ! empty( $data['customer_email'] ) ) {
+
+			$customer_email = sanitize_email(
+				$data['customer_email']
+			);
+		}
+
+
+		$customer_first_name = '';
+
+		if ( ! empty( $data['customer_first_name'] ) ) {
+
+			$customer_first_name = sanitize_text_field(
+				$data['customer_first_name']
+			);
+		}
+
+
+		$customer_last_name = '';
+
+		if ( ! empty( $data['customer_last_name'] ) ) {
+
+			$customer_last_name = sanitize_text_field(
+				$data['customer_last_name']
+			);
+		}
+
+
+		/**
+		 * Validate customer ID when supplied.
+		 *
+		 * This makes sure the supplied ID belongs to
+		 * an existing WordPress user.
+		 */
+		if ( $customer_id > 0 ) {
+
+			$customer_user = get_user_by(
+				'id',
+				$customer_id
+			);
+
+			if ( ! $customer_user ) {
+
+				return new WP_Error(
+					'invalid_customer',
+					'Customer account could not be found.',
+					array(
+						'status' => 400,
+					)
+				);
+			}
+
+
+			/**
+			 * Use the actual WordPress customer email.
+			 */
+			$customer_email = $customer_user->user_email;
+
+
+			/**
+			 * Use stored customer names when available.
+			 */
+			$stored_first_name = get_user_meta(
+				$customer_id,
+				'first_name',
+				true
+			);
+
+			$stored_last_name = get_user_meta(
+				$customer_id,
+				'last_name',
+				true
+			);
+
+
+			if ( ! empty( $stored_first_name ) ) {
+
+				$customer_first_name = $stored_first_name;
+			}
+
+			if ( ! empty( $stored_last_name ) ) {
+
+				$customer_last_name = $stored_last_name;
+			}
+		}
+
+
+		/**
 		 * Create WooCommerce order.
 		 */
 		try {
 
-						/**
+			/**
 			 * -------------------------------------------------------
 			 * Validate inventory before creating order.
 			 * -------------------------------------------------------
@@ -98,6 +551,7 @@ class CloudRight_API {
 				$product = wc_get_product( $product_id );
 
 				if ( ! $product ) {
+
 					return new WP_Error(
 						'product_not_found',
 						'Product could not be found.',
@@ -181,16 +635,30 @@ class CloudRight_API {
 		 * Customer ID
 		 * -------------------------------------------------------
 		 *
-		 * The CloudRight REST request may not have a logged-in
-		 * WordPress session.
+		 * Priority:
 		 *
-		 * Therefore only set customer ID when WordPress provides
-		 * a valid logged-in user.
+		 * 1. CloudRight customer_id
+		 * 2. Current WordPress logged-in user
+		 *
+		 * This allows the CloudRight customer flow to work
+		 * without requiring WordPress Admin login.
 		 */
-		$user_id = get_current_user_id();
+		if ( $customer_id > 0 ) {
 
-		if ( $user_id > 0 ) {
-			$order->set_customer_id( $user_id );
+			$order->set_customer_id(
+				$customer_id
+			);
+
+		} else {
+
+			$user_id = get_current_user_id();
+
+			if ( $user_id > 0 ) {
+
+				$order->set_customer_id(
+					$user_id
+				);
+			}
 		}
 
 
@@ -216,6 +684,7 @@ class CloudRight_API {
 			$quantity = 1;
 
 			if ( ! empty( $item['quantity'] ) ) {
+
 				$quantity = max(
 					1,
 					absint( $item['quantity'] )
@@ -325,6 +794,78 @@ class CloudRight_API {
 						: ''
 				)
 			);
+
+		} elseif ( $customer_id > 0 ) {
+
+			/**
+			 * -------------------------------------------------------
+			 * Customer information fallback
+			 * -------------------------------------------------------
+			 *
+			 * If no billing address was supplied,
+			 * still store the registered customer's
+			 * name and email on the order.
+			 */
+			$order->set_billing_first_name(
+				$customer_first_name
+			);
+
+			$order->set_billing_last_name(
+				$customer_last_name
+			);
+
+			$order->set_billing_email(
+				$customer_email
+			);
+		}
+
+
+		/**
+		 * -------------------------------------------------------
+		 * Make sure customer email is stored
+		 * -------------------------------------------------------
+		 *
+		 * If a billing address was supplied but its email is
+		 * empty, use the registered CloudRight customer email.
+		 */
+		if (
+			$customer_id > 0 &&
+			empty( $order->get_billing_email() )
+		) {
+
+			$order->set_billing_email(
+				$customer_email
+			);
+		}
+
+
+		/**
+		 * -------------------------------------------------------
+		 * Make sure customer name is stored
+		 * -------------------------------------------------------
+		 *
+		 * If billing names are empty, use the registered
+		 * CloudRight customer names.
+		 */
+		if (
+			$customer_id > 0 &&
+			empty( $order->get_billing_first_name() )
+		) {
+
+			$order->set_billing_first_name(
+				$customer_first_name
+			);
+		}
+
+
+		if (
+			$customer_id > 0 &&
+			empty( $order->get_billing_last_name() )
+		) {
+
+			$order->set_billing_last_name(
+				$customer_last_name
+			);
 		}
 
 
@@ -415,11 +956,6 @@ class CloudRight_API {
 		 * -------------------------------------------------------
 		 * Payment method
 		 * -------------------------------------------------------
-		 *
-		 * Preserve the WooCommerce selected payment method.
-		 *
-		 * Example:
-		 * cod
 		 */
 		if ( ! empty( $data['payment_method'] ) ) {
 
@@ -481,14 +1017,6 @@ class CloudRight_API {
 		 * -------------------------------------------------------
 		 * Mark order as Processing
 		 * -------------------------------------------------------
-		 *
-		 * CloudRight dummy payment has succeeded.
-		 *
-		 * We intentionally do NOT call:
-		 *
-		 * $order->payment_complete();
-		 *
-		 * because the WooCommerce payment method may be COD.
 		 */
 		$order->set_status(
 			'processing',
@@ -501,19 +1029,48 @@ class CloudRight_API {
 		 */
 		$order->save();
 
-		/*
-		* Trigger WooCommerce emails.
-		*/
+
+		/**
+		 * -------------------------------------------------------
+		 * Clear WooCommerce cart
+		 * -------------------------------------------------------
+		 *
+		 * The frontend previously tried to obtain a Store API
+		 * nonce to clear the cart. That nonce is not available
+		 * in the current setup.
+		 *
+		 * Clear the cart from the backend instead.
+		 */
+		if ( function_exists( 'wc_load_cart' ) ) {
+
+			wc_load_cart();
+		}
+
+		if ( function_exists( 'WC' ) && WC()->cart ) {
+
+			WC()->cart->empty_cart();
+		}
+
+
+		/**
+		 * Trigger WooCommerce emails.
+		 */
 		$mailer = WC()->mailer();
 
 		$email = $mailer->get_emails();
 
 		if ( isset( $email['WC_Email_New_Order'] ) ) {
-			$email['WC_Email_New_Order']->trigger( $order->get_id() );
+
+			$email['WC_Email_New_Order']->trigger(
+				$order->get_id()
+			);
 		}
 
 		if ( isset( $email['WC_Email_Customer_Processing_Order'] ) ) {
-			$email['WC_Email_Customer_Processing_Order']->trigger( $order->get_id() );
+
+			$email['WC_Email_Customer_Processing_Order']->trigger(
+				$order->get_id()
+			);
 		}
 
 

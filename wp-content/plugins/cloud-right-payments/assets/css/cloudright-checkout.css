@@ -1,17 +1,53 @@
 /* =========================================================
-   CLOUDRIGHT OVERLAY
+   CLOUDRIGHT CHECKOUT
+   Professional Compact Checkout UI
+   ========================================================= */
+
+
+/* =========================================================
+   RESET / BASE
+   ========================================================= */
+
+#cloudright-modal,
+#cloudright-modal * {
+    box-sizing: border-box;
+}
+
+#cloudright-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+}
+
+
+/* =========================================================
+   OVERLAY
    ========================================================= */
 
 .cloudright-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.65);
+
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    z-index: 999999;
-    backdrop-filter: blur(4px);
+
+    padding: 24px;
+
+    background: rgba(15, 23, 42, 0.68);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    overflow-y: auto;
 }
 
 
@@ -19,85 +55,1027 @@
    MAIN MODAL
    ========================================================= */
 
-.cloudright-modal {
-    position: relative;
-    width: 520px;
-    max-width: 100%;
-    max-height: 90vh;
+.cloudright-checkout-modal {
+    /*
+     * Reduced from 720px to 500px.
+     * This makes the desktop popup approximately 30% smaller.
+     */
+    width: min(575px, 100%);
+
+    max-height: calc(100vh - 48px);
+
+    overflow-y: auto;
+
     background: #ffffff;
+
     border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.30);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, Arial, sans-serif;
+
+    box-shadow:
+        0 25px 65px rgba(0, 0, 0, 0.24),
+        0 8px 25px rgba(0, 0, 0, 0.12);
+
+    border: 1px solid rgba(15, 23, 42, 0.08);
+
+    animation:
+        cloudright-modal-in 0.22s ease-out;
+}
+
+
+@keyframes cloudright-modal-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
 }
 
 
 /* =========================================================
-   HEADER
+   TOP BAR
    ========================================================= */
 
-.cloudright-header {
+.cloudright-modal-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 22px 26px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e5e7eb;
+
+    padding: 14px 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #111827,
+            #1f2937
+        );
+
+    color: #ffffff;
+
+    border-radius: 18px 18px 0 0;
+}
+
+
+.cloudright-brand-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.cloudright-brand-mark {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    box-shadow:
+        0 5px 15px rgba(37, 99, 235, 0.3);
 }
 
 
 .cloudright-brand {
-    font-size: 22px;
+    font-size: 15px;
     font-weight: 700;
-    color: #111827;
-    letter-spacing: -0.3px;
+    line-height: 1.2;
 }
 
 
-.cloudright-subtitle {
-    margin-top: 3px;
-    font-size: 13px;
-    color: #64748b;
+.cloudright-brand-caption {
+    margin-top: 2px;
+
+    color: #cbd5e1;
+
+    font-size: 10px;
+    font-weight: 500;
 }
 
 
 .cloudright-close {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
     border: 0;
-    border-radius: 50%;
-    background: #ffffff;
-    color: #64748b;
-    font-size: 25px;
-    line-height: 32px;
+    border-radius: 8px;
+
+    background: rgba(255, 255, 255, 0.08);
+
     cursor: pointer;
-    transition: all 0.2s ease;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 
 .cloudright-close:hover {
-    background: #e5e7eb;
-    color: #111827;
+    background: rgba(255, 255, 255, 0.16);
+    transform: scale(1.04);
+}
+
+
+.cloudright-close span {
+    position: absolute;
+
+    width: 14px;
+    height: 2px;
+
+    border-radius: 2px;
+
+    background: #ffffff;
+}
+
+
+.cloudright-close span:first-child {
+    transform: rotate(45deg);
+}
+
+
+.cloudright-close span:last-child {
+    transform: rotate(-45deg);
 }
 
 
 /* =========================================================
-   CONTENT
+   PROGRESS
    ========================================================= */
 
-.cloudright-content {
-    padding: 24px 26px 26px;
-    max-height: calc(90vh - 85px);
-    overflow-y: auto;
+.cloudright-progress {
+    display: flex;
+    align-items: center;
+
+    padding: 11px 17px;
+
+    background: #f8fafc;
+
+    border-bottom: 1px solid #e5e7eb;
 }
 
 
-.cloudright-payment-title {
-    font-size: 17px;
+.cloudright-progress-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: nowrap;
+}
+
+
+.cloudright-step-number {
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #e5e7eb;
+
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.cloudright-progress-step.active
+.cloudright-step-number,
+.cloudright-progress-step.completed
+.cloudright-step-number {
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+
+    color: #ffffff;
+}
+
+
+.cloudright-step-label {
+    color: #64748b;
+
+    font-size: 10px;
     font-weight: 600;
+}
+
+
+.cloudright-progress-step.active
+.cloudright-step-label,
+.cloudright-progress-step.completed
+.cloudright-step-label {
+    color: #1e293b;
+}
+
+
+.cloudright-progress-line {
+    flex: 1;
+
+    height: 1px;
+
+    margin: 0 8px;
+
+    background: #e2e8f0;
+}
+
+
+.cloudright-progress-line.active {
+    background: #6366f1;
+}
+
+
+/* =========================================================
+   ACCOUNT BODY
+   ========================================================= */
+
+.cloudright-checkout-body {
+    display: block;
+
+    padding: 19px;
+}
+
+
+.cloudright-account-panel {
+    width: 100%;
+    max-width: 410px;
+
+    margin: 0 auto;
+}
+
+
+.cloudright-welcome {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+
+.cloudright-welcome-icon {
+    width: 36px;
+    height: 36px;
+
+    flex: 0 0 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #eef2ff;
+
+    font-size: 17px;
+}
+
+
+.cloudright-welcome h2 {
+    margin: 0 0 4px;
+
     color: #111827;
-    margin-bottom: 16px;
+
+    font-size: 17px;
+    line-height: 1.25;
+    font-weight: 750;
+}
+
+
+.cloudright-welcome p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   ACCOUNT OPTIONS
+   ========================================================= */
+
+.cloudright-account-options {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.cloudright-account-card {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    padding: 12px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.cloudright-account-card:hover {
+    border-color: #6366f1;
+
+    background: #fafaff;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+
+.cloudright-card-icon {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 34px;
+
+    border-radius: 9px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+.cloudright-card-icon-create {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+
+.cloudright-card-content {
+    display: flex;
+    flex-direction: column;
+
+    margin-left: 10px;
+
+    flex: 1;
+}
+
+
+.cloudright-card-content strong {
+    color: #111827;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+.cloudright-card-content small {
+    margin-top: 2px;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+
+.cloudright-card-arrow {
+    color: #94a3b8;
+
+    font-size: 16px;
+
+    transition:
+        transform 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.cloudright-account-card:hover
+.cloudright-card-arrow {
+    color: #4f46e5;
+    transform: translateX(3px);
+}
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+.cloudright-account-form {
+    width: 100%;
+}
+
+
+.cloudright-back-button {
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #4f46e5;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.cloudright-back-button:hover {
+    color: #3730a3;
+}
+
+
+.cloudright-form-heading {
+    margin: 12px 0 14px;
+}
+
+
+.cloudright-form-heading h2 {
+    margin: 0 0 4px;
+
+    color: #111827;
+
+    font-size: 17px;
+    font-weight: 750;
+}
+
+
+.cloudright-form-heading p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+.cloudright-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 9px;
+}
+
+
+.cloudright-form-group {
+    margin-bottom: 11px;
+}
+
+
+.cloudright-form-group label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #334155;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.cloudright-input-wrapper {
+    position: relative;
+}
+
+
+.cloudright-input-icon {
+    position: absolute;
+
+    left: 10px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    pointer-events: none;
+}
+
+
+.cloudright-account-input {
+    width: 100%;
+
+    height: 39px;
+
+    padding: 0 10px;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #111827;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.cloudright-input-wrapper
+.cloudright-account-input {
+    padding-left: 30px;
+}
+
+
+.cloudright-account-input:focus {
+    border-color: #6366f1;
+
+    box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.10);
+}
+
+
+.cloudright-account-input::placeholder {
+    color: #a1aab8;
+}
+
+
+/* =========================================================
+   FORM ERROR
+   ========================================================= */
+
+.cloudright-form-error {
+    margin: 4px 0 10px;
+
+    padding: 8px 10px;
+
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+
+    background: #fef2f2;
+
+    color: #b91c1c;
+
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.cloudright-primary-button {
+    width: 100%;
+
+    min-height: 41px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 18px rgba(79, 70, 229, 0.22);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+
+.cloudright-primary-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 24px rgba(79, 70, 229, 0.28);
+}
+
+
+.cloudright-primary-button:disabled {
+    opacity: 0.7;
+
+    cursor: wait;
+}
+
+
+.cloudright-button-arrow {
+    font-size: 15px;
+}
+
+
+.cloudright-secure-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    margin-top: 9px;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+
+.cloudright-secure-note span {
+    color: #059669;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ORDER PREVIEW
+   ========================================================= */
+
+.cloudright-order-preview {
+    margin-top: 16px;
+
+    padding: 12px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+
+.cloudright-preview-heading {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 9px;
+
+    color: #334155;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.cloudright-preview-lock {
+    font-size: 10px;
+}
+
+
+.cloudright-preview-items {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.cloudright-preview-item {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.cloudright-preview-image {
+    width: 36px;
+    height: 36px;
+
+    position: relative;
+
+    flex: 0 0 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+
+    background: #ffffff;
+}
+
+
+.cloudright-preview-image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.cloudright-preview-image > span:not(.cloudright-preview-qty) {
+    font-size: 15px;
+}
+
+
+.cloudright-preview-qty {
+    position: absolute;
+
+    right: -2px;
+    top: -2px;
+
+    min-width: 15px;
+    height: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 3px;
+
+    border-radius: 20px;
+
+    background: #111827;
+
+    color: #ffffff;
+
+    font-size: 8px;
+    font-weight: 700;
+}
+
+
+.cloudright-preview-info {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.cloudright-preview-info strong {
+    overflow: hidden;
+
+    color: #334155;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+.cloudright-preview-info span {
+    margin-top: 2px;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+
+.cloudright-preview-total {
+    display: flex;
+    justify-content: space-between;
+
+    margin-top: 10px;
+    padding-top: 10px;
+
+    border-top: 1px solid #e2e8f0;
+
+    color: #475569;
+
+    font-size: 10px;
+}
+
+
+.cloudright-preview-total strong {
+    color: #111827;
+
+    font-size: 13px;
+}
+
+
+.cloudright-trust-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 6px 12px;
+
+    margin-top: 9px;
+}
+
+
+.cloudright-trust-list div {
+    color: #64748b;
+
+    font-size: 8px;
+}
+
+
+.cloudright-trust-list span {
+    margin-right: 3px;
+
+    color: #059669;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   PAYMENT BODY
+   ========================================================= */
+
+.cloudright-payment-body {
+    display: block;
+
+    padding: 19px;
+}
+
+
+.cloudright-payment-main {
+    width: 100%;
+    max-width: 420px;
+
+    margin: 0 auto;
+}
+
+
+.cloudright-payment-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+
+.cloudright-heading-icon {
+    width: 36px;
+    height: 36px;
+
+    flex: 0 0 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eef2ff;
+
+    font-size: 17px;
+}
+
+
+.cloudright-payment-heading h2 {
+    margin: 0 0 3px;
+
+    color: #111827;
+
+    font-size: 16px;
+    font-weight: 750;
+}
+
+
+.cloudright-payment-heading p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   CUSTOMER BADGE
+   ========================================================= */
+
+.cloudright-customer-badge {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 11px;
+    padding: 8px 10px;
+
+    border: 1px solid #e0e7ff;
+    border-radius: 8px;
+
+    background: #f5f7ff;
+}
+
+
+.cloudright-customer-avatar {
+    width: 29px;
+    height: 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.cloudright-customer-badge div {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.cloudright-customer-badge strong {
+    color: #1e293b;
+
+    font-size: 10px;
+}
+
+
+.cloudright-customer-badge span {
+    margin-top: 1px;
+
+    color: #64748b;
+
+    font-size: 8px;
 }
 
 
@@ -106,90 +1084,99 @@
    ========================================================= */
 
 .cloudright-cart-items {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding: 10px;
+
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    overflow: hidden;
+    border-radius: 9px;
+
+    background: #f8fafc;
 }
 
 
 .cloudright-cart-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px;
-    background: #ffffff;
-    border-bottom: 1px solid #edf0f2;
+
+    gap: 8px;
 }
 
-
-.cloudright-cart-item:last-child {
-    border-bottom: 0;
-}
-
-
-/* =========================================================
-   PRODUCT IMAGE
-   ========================================================= */
 
 .cloudright-item-image-wrapper {
-    flex: 0 0 58px;
-    width: 58px;
-    height: 58px;
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+
+    overflow: hidden;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+
+    background: #ffffff;
 }
 
 
 .cloudright-item-image {
-    width: 58px;
-    height: 58px;
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
     object-fit: cover;
-    border-radius: 9px;
-    border: 1px solid #e5e7eb;
 }
 
 
 .cloudright-item-image-placeholder {
-    width: 58px;
-    height: 58px;
+    width: 100%;
+    height: 100%;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f1f5f9;
-    border-radius: 9px;
-    font-size: 24px;
+
+    font-size: 15px;
 }
 
 
-/* =========================================================
-   PRODUCT DETAILS
-   ========================================================= */
-
 .cloudright-item-details {
     flex: 1;
+
     min-width: 0;
 }
 
 
 .cloudright-item-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1f2937;
-    line-height: 1.35;
-    word-break: break-word;
+    overflow: hidden;
+
+    color: #334155;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 
 .cloudright-item-meta {
-    margin-top: 5px;
-    font-size: 13px;
+    margin-top: 2px;
+
     color: #64748b;
+
+    font-size: 8px;
 }
 
 
 .cloudright-item-price {
-    flex-shrink: 0;
-    font-size: 15px;
-    font-weight: 600;
     color: #111827;
+
+    font-size: 10px;
+    font-weight: 700;
 }
 
 
@@ -201,132 +1188,133 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 4px 18px;
+
+    margin-top: 11px;
+    padding: 11px 12px;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef2ff,
+            #f5f3ff
+        );
 }
 
 
-.cloudright-total-label {
-    font-size: 16px;
-    color: #64748b;
-}
+.cloudright-total-section span {
+    color: #475569;
 
-
-.cloudright-total-price {
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
-}
-
-
-/* =========================================================
-   PAYMENT INFORMATION
-   ========================================================= */
-
-.cloudright-payment-box {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 15px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-
-.cloudright-payment-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #e2e8f0;
-    color: #334155;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-
-.cloudright-payment-heading {
-    font-size: 14px;
+    font-size: 10px;
     font-weight: 600;
-    color: #334155;
 }
 
 
-.cloudright-payment-description {
-    margin-top: 2px;
-    font-size: 12px;
-    color: #64748b;
+.cloudright-total-section strong {
+    color: #111827;
+
+    font-size: 17px;
+    font-weight: 800;
 }
 
 
 /* =========================================================
-   ACTION BUTTONS
+   PAYMENT ACTIONS
    ========================================================= */
 
 .cloudright-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    margin-top: 11px;
 }
 
 
-.cloudright-success-button {
+.cloudright-payment-button {
+    min-height: 42px;
+
+    font-size: 12px;
+}
+
+
+.cloudright-secondary-button {
     width: 100%;
-    padding: 14px 20px;
+
+    min-height: 34px;
+
+    margin-top: 6px;
+
     border: 0;
-    border-radius: 9px;
-    background: #111827;
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
 
+    background: transparent;
 
-.cloudright-success-button:hover {
-    background: #1f2937;
-    transform: translateY(-1px);
-}
-
-
-.cloudright-success-button:disabled {
-    opacity: 0.65;
-    cursor: wait;
-    transform: none;
-}
-
-
-.cloudright-failure-button {
-    width: 100%;
-    padding: 11px 20px;
-    border: 1px solid #d1d5db;
-    border-radius: 9px;
-    background: #ffffff;
     color: #64748b;
-    font-size: 14px;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 600;
+
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
 
-.cloudright-failure-button:hover {
-    background: #f8fafc;
-    color: #374151;
+.cloudright-secondary-button:hover {
+    color: #334155;
 }
 
 
 /* =========================================================
-   EMPTY CART
+   PAYMENT SIDE
    ========================================================= */
 
-.cloudright-empty-cart {
-    padding: 30px;
-    text-align: center;
-    color: #64748b;
+.cloudright-payment-side {
+    display: none;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.cloudright-modal-footer {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 9px 17px;
+
+    border-top: 1px solid #e5e7eb;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.cloudright-loading-spinner {
+    width: 13px;
+    height: 13px;
+
+    display: inline-block;
+
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation:
+        cloudright-spin 0.7s linear infinite;
+}
+
+
+@keyframes cloudright-spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
 }
 
 
@@ -336,16 +1324,106 @@
 
 .cloudright-toast {
     position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 14px 24px;
-    background: #1f2937;
+
+    right: 18px;
+    bottom: 18px;
+
+    z-index: 1000001;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    max-width: 320px;
+
+    padding: 10px 12px;
+
+    border-radius: 9px;
+
+    background: #111827;
+
     color: #ffffff;
-    border-radius: 8px;
-    font-size: 14px;
-    z-index: 1000000;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.2);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    animation:
+        cloudright-toast-in 0.2s ease-out;
+}
+
+
+@keyframes cloudright-toast-in {
+
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+.cloudright-toast-icon {
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #ef4444;
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.cloudright-error {
+    margin-bottom: 10px;
+
+    padding: 8px 10px;
+
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+
+    background: #fef2f2;
+
+    color: #b91c1c;
+
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   EMPTY CART
+   ========================================================= */
+
+.cloudright-preview-empty,
+.cloudright-empty-cart {
+    padding: 12px;
+
+    color: #64748b;
+
+    text-align: center;
+
+    font-size: 10px;
 }
 
 
@@ -356,44 +1434,906 @@
 @media (max-width: 600px) {
 
     .cloudright-overlay {
+        align-items: flex-start;
+
         padding: 12px;
     }
 
-    .cloudright-modal {
-        border-radius: 14px;
+
+    .cloudright-checkout-modal {
+        width: 100%;
+
+        max-height: calc(100vh - 24px);
+
+        border-radius: 16px;
     }
 
-    .cloudright-header {
-        padding: 18px 20px;
+
+    .cloudright-modal-topbar {
+        padding: 14px 15px;
+
+        border-radius: 16px 16px 0 0;
     }
 
-    .cloudright-content {
-        padding: 20px;
+
+    .cloudright-brand-mark {
+        width: 34px;
+        height: 34px;
     }
 
-    .cloudright-item-image-wrapper,
-    .cloudright-item-image,
-    .cloudright-item-image-placeholder {
-        width: 50px;
-        height: 50px;
+
+    .cloudright-progress {
+        padding: 11px 14px;
     }
 
-    .cloudright-item-name {
-        font-size: 14px;
+
+    .cloudright-step-label {
+        display: none;
     }
 
-    .cloudright-total-price {
-        font-size: 21px;
+
+    .cloudright-progress-line {
+        margin: 0 6px;
     }
+
+
+    .cloudright-checkout-body,
+    .cloudright-payment-body {
+        padding: 17px 14px;
+    }
+
+
+    .cloudright-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+
+    .cloudright-welcome h2 {
+        font-size: 17px;
+    }
+
+
+    .cloudright-payment-heading h2 {
+        font-size: 17px;
+    }
+
+
+    .cloudright-modal-footer {
+        padding: 10px 14px;
+    }
+
 }
 
-.cloudright-error {
-    margin-bottom: 16px;
-    padding: 12px 14px;
-    border: 1px solid #f1b5b5;
-    border-radius: 8px;
-    background: #fff4f4;
-    color: #b42318;
+
+/* =========================================================
+   ORDER RECEIVED PAGE
+   ========================================================= */
+
+.cloudright-order-page {
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 45px auto;
+
+    padding: 20px;
+}
+
+
+.cloudright-order-card {
+    overflow: hidden;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 24px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 25px 70px rgba(15, 23, 42, 0.10);
+}
+
+
+/* =========================================================
+   SUCCESS HEADER
+   ========================================================= */
+
+.cloudright-order-success-header {
+    position: relative;
+
+    padding: 45px 35px 38px;
+
+    text-align: center;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0f766e 0%,
+            #059669 45%,
+            #16a34a 100%
+        );
+}
+
+
+.cloudright-order-success-header::before {
+    content: "";
+
+    position: absolute;
+
+    width: 280px;
+    height: 280px;
+
+    top: -160px;
+    right: -80px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.08);
+}
+
+
+.cloudright-order-success-header::after {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    bottom: -100px;
+    left: -70px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.06);
+}
+
+
+.cloudright-success-icon-wrap {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    justify-content: center;
+
+    margin-bottom: 15px;
+}
+
+
+.cloudright-success-icon {
+    width: 72px;
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    color: #059669;
+
+    font-size: 36px;
+    font-weight: 800;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+
+.cloudright-success-label {
+    position: relative;
+    z-index: 1;
+
+    display: inline-block;
+
+    margin-bottom: 9px;
+
+    padding: 5px 11px;
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    border-radius: 30px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+
+    text-transform: uppercase;
+}
+
+
+.cloudright-order-success-header h1 {
+    position: relative;
+    z-index: 1;
+
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+
+.cloudright-order-thank-you {
+    position: relative;
+    z-index: 1;
+
+    margin: 10px 0 5px;
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 650;
+}
+
+
+.cloudright-order-success-description {
+    position: relative;
+    z-index: 1;
+
+    max-width: 520px;
+
+    margin: 0 auto;
+
+    color: rgba(255, 255, 255, 0.86);
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   ORDER INFO
+   ========================================================= */
+
+.cloudright-order-info-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    padding: 22px;
+
+    background: #f8fafc;
+}
+
+
+.cloudright-order-info-item {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 14px;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 12px;
+
+    background: #ffffff;
+}
+
+
+.cloudright-order-info-icon {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.cloudright-order-info-item > div:last-child {
+    min-width: 0;
+}
+
+
+.cloudright-order-info-item span {
+    display: block;
+
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+.cloudright-order-info-item strong {
+    display: block;
+
+    margin-top: 3px;
+
+    overflow: hidden;
+
+    color: #1e293b;
+
+    font-size: 12px;
+    font-weight: 750;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+.cloudright-email-value {
+    font-size: 10px !important;
+}
+
+
+/* =========================================================
+   ORDER SECTION
+   ========================================================= */
+
+.cloudright-order-section {
+    padding: 30px 32px;
+}
+
+
+.cloudright-section-eyebrow {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #6366f1;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+}
+
+
+.cloudright-section-heading h2 {
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 21px;
+    font-weight: 800;
+}
+
+
+.cloudright-order-items {
+    margin-top: 18px;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 13px;
+
+    overflow: hidden;
+}
+
+
+.cloudright-order-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 15px 17px;
+
+    border-bottom: 1px solid #eef2f7;
+}
+
+
+.cloudright-order-item:last-child {
+    border-bottom: 0;
+}
+
+
+.cloudright-product-left {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 0;
+}
+
+
+.cloudright-product-icon {
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #f1f5f9;
+
+    color: #4f46e5;
+
     font-size: 14px;
-    line-height: 1.4;
+}
+
+
+.cloudright-product-details {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+
+.cloudright-product-name {
+    overflow: hidden;
+
+    color: #1e293b;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+a.cloudright-product-name:hover {
+    color: #4f46e5;
+}
+
+
+.cloudright-product-quantity {
+    margin-top: 3px;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+
+.cloudright-product-price {
+    color: #111827;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    white-space: nowrap;
+}
+
+
+.cloudright-price-summary {
+    margin-top: 12px;
+
+    padding: 15px 17px;
+
+    border-radius: 12px;
+
+    background: #f8fafc;
+}
+
+
+.cloudright-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+
+.cloudright-price-row strong {
+    color: #334155;
+
+    font-size: 13px;
+}
+
+
+.cloudright-final-total {
+    margin-top: 11px;
+    padding-top: 11px;
+
+    border-top: 1px solid #e2e8f0;
+
+    color: #111827;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.cloudright-final-total strong {
+    color: #111827;
+
+    font-size: 20px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   PAYMENT CARD
+   ========================================================= */
+
+.cloudright-payment-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin: 0 32px;
+
+    padding: 16px;
+
+    border: 1px solid #bbf7d0;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f0fdf4,
+            #ecfdf5
+        );
+}
+
+
+.cloudright-payment-left {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.cloudright-payment-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #16a34a;
+
+    color: #ffffff;
+
+    font-size: 18px;
+    font-weight: 800;
+}
+
+
+.cloudright-payment-left > div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.cloudright-payment-label {
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+
+.cloudright-payment-left strong {
+    margin-top: 2px;
+
+    color: #166534;
+
+    font-size: 13px;
+}
+
+
+.cloudright-paid-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background: #16a34a;
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 750;
+}
+
+
+.cloudright-paid-badge span {
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   CONFIRMATION MESSAGE
+   ========================================================= */
+
+.cloudright-confirmation-message {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 11px;
+
+    margin: 22px 32px 0;
+
+    padding: 15px;
+
+    border: 1px solid #bfdbfe;
+
+    border-radius: 12px;
+
+    background: #eff6ff;
+}
+
+
+.cloudright-confirmation-icon {
+    width: 35px;
+    height: 35px;
+
+    flex: 0 0 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 15px;
+}
+
+
+.cloudright-confirmation-message strong {
+    color: #1e40af;
+
+    font-size: 12px;
+}
+
+
+.cloudright-confirmation-message p {
+    margin: 3px 0 0;
+
+    color: #475569;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ORDER FOOTER
+   ========================================================= */
+
+.cloudright-order-footer {
+    padding: 24px 32px 30px;
+
+    text-align: center;
+}
+
+
+.cloudright-order-footer p {
+    margin: 0;
+
+    color: #334155;
+
+    font-size: 13px;
+}
+
+
+.cloudright-order-footer p strong {
+    color: #4f46e5;
+}
+
+
+.cloudright-order-footer span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   ERROR CARD
+   ========================================================= */
+
+.cloudright-order-error-card {
+    max-width: 620px;
+
+    margin: 0 auto;
+
+    padding: 50px 30px;
+
+    text-align: center;
+}
+
+
+.cloudright-order-error-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    background: #fef2f2;
+
+    color: #dc2626;
+
+    font-size: 25px;
+    font-weight: 800;
+}
+
+
+.cloudright-order-error-card h1 {
+    margin: 0 0 8px;
+
+    color: #111827;
+
+    font-size: 24px;
+}
+
+
+.cloudright-order-error-card p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   ORDER RECEIVED RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .cloudright-order-page {
+        margin: 20px auto;
+
+        padding: 10px;
+    }
+
+
+    .cloudright-order-card {
+        border-radius: 18px;
+    }
+
+
+    .cloudright-order-success-header {
+        padding: 35px 20px 30px;
+    }
+
+
+    .cloudright-success-icon {
+        width: 62px;
+        height: 62px;
+
+        font-size: 30px;
+    }
+
+
+    .cloudright-order-success-header h1 {
+        font-size: 27px;
+    }
+
+
+    .cloudright-order-info-grid {
+        grid-template-columns: 1fr;
+
+        padding: 15px;
+    }
+
+
+    .cloudright-order-section {
+        padding: 25px 17px;
+    }
+
+
+    .cloudright-payment-card {
+        margin: 0 17px;
+    }
+
+
+    .cloudright-confirmation-message {
+        margin-left: 17px;
+        margin-right: 17px;
+    }
+
+
+    .cloudright-order-footer {
+        padding-left: 17px;
+        padding-right: 17px;
+    }
+
+}
+
+
+@media (max-width: 420px) {
+
+    .cloudright-overlay {
+        padding: 8px;
+    }
+
+
+    .cloudright-checkout-modal {
+        max-height: calc(100vh - 16px);
+    }
+
+
+    .cloudright-checkout-body,
+    .cloudright-payment-body {
+        padding: 15px 12px;
+    }
+
+
+    .cloudright-order-preview {
+        padding: 11px;
+    }
+
+
+    .cloudright-modal-footer {
+        font-size: 8px;
+    }
+
+
+    .cloudright-order-item {
+        padding: 13px;
+    }
+
+
+    .cloudright-product-icon {
+        width: 34px;
+        height: 34px;
+
+        flex-basis: 34px;
+    }
+
+
+    .cloudright-payment-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
 }
