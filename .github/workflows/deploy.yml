@@ -1,4 +1,3 @@
-```yaml
 name: Build, Push and Deploy WooCommerce
 
 on:
@@ -318,4 +317,3 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
-```
