@@ -39,6 +39,50 @@ add_action(
 
 
 /**
+ * Enqueue CloudRight My Account assets.
+ */
+function cloudright_enqueue_my_account_assets() {
+
+	if ( ! function_exists( 'is_account_page' ) || ! is_account_page() ) {
+		return;
+	}
+
+
+	wp_enqueue_script(
+		'cloudright-my-account',
+		plugin_dir_url( __FILE__ ) . 'assets/js/cloudright-my-account.js',
+		array(),
+		'1.0.0',
+		true
+	);
+
+
+	wp_enqueue_style(
+		'cloudright-my-account',
+		plugin_dir_url( __FILE__ ) . 'assets/css/cloudright-my-account.css',
+		array(),
+		'1.0.0'
+	);
+
+
+	wp_localize_script(
+		'cloudright-my-account',
+		'cloudRightMyAccountConfig',
+		array(
+			'restUrl' => esc_url_raw(
+				rest_url( 'cloudright/v1' )
+			),
+		)
+	);
+}
+
+add_action(
+	'wp_enqueue_scripts',
+	'cloudright_enqueue_my_account_assets'
+);
+
+
+/**
  * Load CloudRight REST API.
  */
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-cloudright-api.php';

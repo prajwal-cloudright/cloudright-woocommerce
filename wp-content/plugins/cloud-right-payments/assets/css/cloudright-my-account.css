@@ -1,0 +1,570 @@
+/* =========================================================
+   CLOUDRIGHT MY ACCOUNT
+   Professional Customer Account UI
+   ========================================================= */
+
+.cloudright-account-page {
+    width: 100%;
+    padding: 50px 20px;
+    box-sizing: border-box;
+}
+
+.cloudright-account-shell {
+    width: min(520px, 100%);
+    margin: 0 auto;
+    padding: 42px 40px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.cloudright-account-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 34px;
+}
+
+.cloudright-account-brand-mark {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    background: #111827;
+    color: #ffffff;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.cloudright-account-brand-name {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.cloudright-account-brand-caption {
+    margin-top: 3px;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   LOGIN ICON
+   ========================================================= */
+
+.cloudright-account-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 20px;
+
+    background: #f3f4f6;
+    color: #111827;
+
+    border-radius: 50%;
+
+    font-size: 24px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+.cloudright-account-shell h1 {
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+
+    text-align: center;
+}
+
+.cloudright-account-description {
+    margin: 12px 0 30px;
+
+    color: #6b7280;
+
+    font-size: 15px;
+    line-height: 1.6;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.cloudright-account-login-form {
+    width: 100%;
+}
+
+.cloudright-account-field {
+    margin-bottom: 18px;
+}
+
+.cloudright-account-field label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #374151;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.cloudright-account-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.cloudright-account-input-icon {
+    position: absolute;
+
+    left: 15px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #6b7280;
+
+    font-size: 17px;
+    font-weight: 600;
+
+    pointer-events: none;
+}
+
+.cloudright-account-input-wrapper input {
+    width: 100%;
+    height: 52px;
+
+    padding: 0 16px 0 42px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #111827;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.cloudright-account-input-wrapper input::placeholder {
+    color: #9ca3af;
+}
+
+.cloudright-account-input-wrapper input:focus {
+    border-color: #111827;
+
+    box-shadow:
+        0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.cloudright-account-error {
+    margin: 14px 0;
+
+    padding: 12px 14px;
+
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+
+    color: #b91c1c;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.cloudright-account-primary-button {
+    width: 100%;
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    margin-top: 8px;
+
+    padding: 14px 48px 14px 20px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #111827;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.cloudright-account-primary-button:hover {
+    background: #1f2937;
+}
+
+.cloudright-account-primary-button:active {
+    transform: translateY(1px);
+}
+
+.cloudright-account-primary-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.cloudright-account-button-text {
+    display: inline-block;
+}
+
+.cloudright-account-button-arrow {
+    position: absolute;
+
+    right: 18px;
+
+    font-size: 20px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.cloudright-account-loading-spinner {
+    width: 17px;
+    height: 17px;
+
+    margin-right: 9px;
+
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation: cloudright-account-spin 0.7s linear infinite;
+}
+
+@keyframes cloudright-account-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.cloudright-account-security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-top: 20px;
+
+    color: #6b7280;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.cloudright-account-security-note span {
+    color: #16a34a;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   LOGGED-IN PROFILE
+   ========================================================= */
+
+.cloudright-account-profile-avatar {
+    width: 72px;
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 18px;
+
+    background: #111827;
+    color: #ffffff;
+
+    border-radius: 50%;
+
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.cloudright-account-welcome {
+    text-align: center;
+
+    margin-bottom: 32px;
+}
+
+.cloudright-account-welcome > span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #6b7280;
+
+    font-size: 14px;
+}
+
+.cloudright-account-welcome h1 {
+    font-size: 28px;
+}
+
+
+/* =========================================================
+   ACCOUNT INFORMATION
+   ========================================================= */
+
+.cloudright-account-information {
+    width: 100%;
+
+    margin-bottom: 24px;
+}
+
+.cloudright-account-section-label {
+    margin-bottom: 10px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+}
+
+.cloudright-account-info-card {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 17px;
+
+    background: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.cloudright-account-info-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+
+    color: #374151;
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.cloudright-account-info-content {
+    min-width: 0;
+}
+
+.cloudright-account-info-content span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #6b7280;
+
+    font-size: 12px;
+}
+
+.cloudright-account-info-content strong {
+    display: block;
+
+    color: #111827;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+   ========================================================= */
+
+.cloudright-account-logout-button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 14px 17px;
+
+    background: #ffffff;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    color: #374151;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.cloudright-account-logout-button:hover {
+    background: #f9fafb;
+
+    border-color: #9ca3af;
+
+    color: #111827;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.cloudright-account-footer {
+    margin-top: 26px;
+
+    color: #9ca3af;
+
+    font-size: 11px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   REMOVE DEFAULT WOOCOMMERCE ACCOUNT ELEMENTS
+   ========================================================= */
+
+.woocommerce-account .woocommerce-MyAccount-navigation,
+.woocommerce-account .woocommerce-MyAccount-content {
+    width: 100%;
+}
+
+.woocommerce-account .woocommerce-MyAccount-navigation {
+    display: none;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .cloudright-account-page {
+        padding: 25px 14px;
+    }
+
+    .cloudright-account-shell {
+        padding: 30px 22px;
+
+        border-radius: 14px;
+    }
+
+    .cloudright-account-brand {
+        margin-bottom: 28px;
+    }
+
+    .cloudright-account-shell h1 {
+        font-size: 24px;
+    }
+
+    .cloudright-account-profile-avatar {
+        width: 64px;
+        height: 64px;
+
+        font-size: 20px;
+    }
+
+    .cloudright-account-welcome h1 {
+        font-size: 24px;
+    }
+
+}

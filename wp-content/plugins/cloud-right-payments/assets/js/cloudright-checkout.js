@@ -12,6 +12,66 @@
 
     /*
      * =========================================================
+     * SHARED CUSTOMER STORAGE
+     * =========================================================
+     */
+
+    const CLOUDRIGHT_CUSTOMER_STORAGE_KEY =
+        'cloudright_customer';
+
+
+    function getStoredCloudRightCustomer() {
+
+        try {
+
+            const storedCustomer =
+                localStorage.getItem(
+                    CLOUDRIGHT_CUSTOMER_STORAGE_KEY
+                );
+
+            if (!storedCustomer) {
+                return null;
+            }
+
+            return JSON.parse(
+                storedCustomer
+            );
+
+        } catch (error) {
+
+            console.error(
+                'CloudRight: Unable to read stored customer.',
+                error
+            );
+
+            return null;
+        }
+    }
+
+
+    function saveStoredCloudRightCustomer(
+        customer
+    ) {
+
+        try {
+
+            localStorage.setItem(
+                CLOUDRIGHT_CUSTOMER_STORAGE_KEY,
+                JSON.stringify(customer)
+            );
+
+        } catch (error) {
+
+            console.error(
+                'CloudRight: Unable to save customer.',
+                error
+            );
+        }
+    }
+
+
+    /*
+     * =========================================================
      * START CHECKOUT
      * =========================================================
      */
@@ -36,7 +96,37 @@
 
             const cart = await response.json();
 
-            openCloudRightAccountModal(cart);
+
+            /*
+             * Check shared CloudRight login.
+             */
+            const storedCustomer =
+                getStoredCloudRightCustomer();
+
+
+            if (storedCustomer) {
+
+                cloudRightCustomer =
+                    storedCustomer;
+
+                /*
+                 * Customer is already logged in.
+                 * Skip the login screen.
+                 */
+                openCloudRightModal(
+                    cart
+                );
+
+            } else {
+
+                /*
+                 * No customer found.
+                 * Show the login screen.
+                 */
+                openCloudRightAccountModal(
+                    cart
+                );
+            }
 
         } catch (error) {
 
@@ -348,8 +438,7 @@
                                     </h2>
 
                                     <p>
-                                        Sign in or create an account
-                                        to continue your checkout.
+                                        Login to continue your checkout.
                                     </p>
 
                                 </div>
@@ -358,89 +447,15 @@
 
 
                             <div
-                                id="cloudright-account-options"
-                                class="cloudright-account-options"
-                            >
-
-                                <button
-                                    type="button"
-                                    id="cloudright-login-option"
-                                    class="cloudright-account-card"
-                                >
-
-                                    <span class="cloudright-card-icon">
-                                        →
-                                    </span>
-
-                                    <span class="cloudright-card-content">
-
-                                        <strong>
-                                            Login
-                                        </strong>
-
-                                        <small>
-                                            Already have an account?
-                                        </small>
-
-                                    </span>
-
-                                    <span class="cloudright-card-arrow">
-                                        →
-                                    </span>
-
-                                </button>
-
-
-                                <button
-                                    type="button"
-                                    id="cloudright-create-option"
-                                    class="cloudright-account-card"
-                                >
-
-                                    <span class="cloudright-card-icon cloudright-card-icon-create">
-                                        +
-                                    </span>
-
-                                    <span class="cloudright-card-content">
-
-                                        <strong>
-                                            Create Account
-                                        </strong>
-
-                                        <small>
-                                            New to CloudRight?
-                                        </small>
-
-                                    </span>
-
-                                    <span class="cloudright-card-arrow">
-                                        →
-                                    </span>
-
-                                </button>
-
-                            </div>
-
-
-                            <div
                                 id="cloudright-login-form"
                                 class="cloudright-account-form"
-                                style="display: none;"
+                                style="display: block;"
                             >
-
-                                <button
-                                    type="button"
-                                    id="cloudright-login-back"
-                                    class="cloudright-back-button"
-                                >
-                                    ← Back
-                                </button>
-
 
                                 <div class="cloudright-form-heading">
 
                                     <h2>
-                                        Sign in
+                                        Login to Continue
                                     </h2>
 
                                     <p>
@@ -492,139 +507,6 @@
                                 >
                                     <span>
                                         Continue
-                                    </span>
-
-                                    <span class="cloudright-button-arrow">
-                                        →
-                                    </span>
-
-                                </button>
-
-
-                                <div class="cloudright-secure-note">
-
-                                    <span>
-                                        ✓
-                                    </span>
-
-                                    Your information is securely handled.
-
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                id="cloudright-create-form"
-                                class="cloudright-account-form"
-                                style="display: none;"
-                            >
-
-                                <button
-                                    type="button"
-                                    id="cloudright-create-back"
-                                    class="cloudright-back-button"
-                                >
-                                    ← Back
-                                </button>
-
-
-                                <div class="cloudright-form-heading">
-
-                                    <h2>
-                                        Create your account
-                                    </h2>
-
-                                    <p>
-                                        It only takes a few seconds.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="cloudright-form-row">
-
-                                    <div class="cloudright-form-group">
-
-                                        <label
-                                            for="cloudright-first-name"
-                                        >
-                                            First name
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="cloudright-first-name"
-                                            class="cloudright-account-input"
-                                            placeholder="First name"
-                                            autocomplete="given-name"
-                                        >
-
-                                    </div>
-
-
-                                    <div class="cloudright-form-group">
-
-                                        <label
-                                            for="cloudright-last-name"
-                                        >
-                                            Last name
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="cloudright-last-name"
-                                            class="cloudright-account-input"
-                                            placeholder="Last name"
-                                            autocomplete="family-name"
-                                        >
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="cloudright-form-group">
-
-                                    <label
-                                        for="cloudright-create-email"
-                                    >
-                                        Email address
-                                    </label>
-
-                                    <div class="cloudright-input-wrapper">
-
-                                        <span class="cloudright-input-icon">
-                                            @
-                                        </span>
-
-                                        <input
-                                            type="email"
-                                            id="cloudright-create-email"
-                                            class="cloudright-account-input"
-                                            placeholder="you@example.com"
-                                            autocomplete="email"
-                                        >
-
-                                    </div>
-
-                                </div>
-
-
-                                <div
-                                    id="cloudright-create-error"
-                                    class="cloudright-form-error"
-                                    style="display: none;"
-                                ></div>
-
-
-                                <button
-                                    type="button"
-                                    id="cloudright-create-button"
-                                    class="cloudright-primary-button"
-                                >
-                                    <span>
-                                        Create Account
                                     </span>
 
                                     <span class="cloudright-button-arrow">
@@ -756,152 +638,32 @@
 
         /*
          * =====================================================
-         * ELEMENTS
-         * =====================================================
-         */
-
-        const accountOptions =
-            document.getElementById(
-                'cloudright-account-options'
-            );
-
-        const loginForm =
-            document.getElementById(
-                'cloudright-login-form'
-            );
-
-        const createForm =
-            document.getElementById(
-                'cloudright-create-form'
-            );
-
-        const loginOption =
-            document.getElementById(
-                'cloudright-login-option'
-            );
-
-        const createOption =
-            document.getElementById(
-                'cloudright-create-option'
-            );
-
-        const loginBack =
-            document.getElementById(
-                'cloudright-login-back'
-            );
-
-        const createBack =
-            document.getElementById(
-                'cloudright-create-back'
-            );
-
-
-        /*
-         * =====================================================
-         * SHOW LOGIN
-         * =====================================================
-         */
-
-        loginOption.addEventListener(
-            'click',
-            function () {
-
-                accountOptions.style.display =
-                    'none';
-
-                createForm.style.display =
-                    'none';
-
-                loginForm.style.display =
-                    'block';
-
-                document.getElementById(
-                    'cloudright-login-email'
-                ).focus();
-
-            }
-        );
-
-
-        /*
-         * =====================================================
-         * SHOW CREATE ACCOUNT
-         * =====================================================
-         */
-
-        createOption.addEventListener(
-            'click',
-            function () {
-
-                accountOptions.style.display =
-                    'none';
-
-                loginForm.style.display =
-                    'none';
-
-                createForm.style.display =
-                    'block';
-
-                document.getElementById(
-                    'cloudright-first-name'
-                ).focus();
-
-            }
-        );
-
-
-        /*
-         * =====================================================
-         * BACK
-         * =====================================================
-         */
-
-        loginBack.addEventListener(
-            'click',
-            function () {
-
-                loginForm.style.display =
-                    'none';
-
-                accountOptions.style.display =
-                    'flex';
-
-                clearCloudRightFormError(
-                    'cloudright-login-error'
-                );
-
-            }
-        );
-
-
-        createBack.addEventListener(
-            'click',
-            function () {
-
-                createForm.style.display =
-                    'none';
-
-                accountOptions.style.display =
-                    'flex';
-
-                clearCloudRightFormError(
-                    'cloudright-create-error'
-                );
-
-            }
-        );
-
-
-        /*
-         * =====================================================
          * LOGIN
-         * =====================================================
-         */
+         * ===================================================== */
 
         const loginButton =
             document.getElementById(
                 'cloudright-login-button'
             );
+
+
+        const loginEmailInput =
+            document.getElementById(
+                'cloudright-login-email'
+            );
+
+
+        if (loginEmailInput) {
+
+            setTimeout(
+                function () {
+
+                    loginEmailInput.focus();
+
+                },
+                100
+            );
+        }
 
 
         loginButton.addEventListener(
@@ -1002,6 +764,15 @@
                     };
 
 
+                    /*
+                     * Save the same customer information
+                     * used by My Account.
+                     */
+                    saveStoredCloudRightCustomer(
+                        cloudRightCustomer
+                    );
+
+
                     openCloudRightModal(
                         cart
                     );
@@ -1030,203 +801,6 @@
                     resetCloudRightButton(
                         loginButton,
                         'Continue',
-                        '→'
-                    );
-
-                }
-
-            }
-        );
-
-
-        /*
-         * =====================================================
-         * CREATE ACCOUNT
-         * =====================================================
-         */
-
-        const createButton =
-            document.getElementById(
-                'cloudright-create-button'
-            );
-
-
-        createButton.addEventListener(
-            'click',
-            async function () {
-
-                const firstName =
-                    document.getElementById(
-                        'cloudright-first-name'
-                    ).value.trim();
-
-
-                const lastName =
-                    document.getElementById(
-                        'cloudright-last-name'
-                    ).value.trim();
-
-
-                const email =
-                    document.getElementById(
-                        'cloudright-create-email'
-                    ).value.trim().toLowerCase();
-
-
-                clearCloudRightFormError(
-                    'cloudright-create-error'
-                );
-
-
-                if (!firstName) {
-
-                    showCloudRightFormError(
-                        'cloudright-create-error',
-                        'Please enter your first name.'
-                    );
-
-                    document.getElementById(
-                        'cloudright-first-name'
-                    ).focus();
-
-                    return;
-                }
-
-
-                if (!lastName) {
-
-                    showCloudRightFormError(
-                        'cloudright-create-error',
-                        'Please enter your last name.'
-                    );
-
-                    document.getElementById(
-                        'cloudright-last-name'
-                    ).focus();
-
-                    return;
-                }
-
-
-                if (!isValidEmail(email)) {
-
-                    showCloudRightFormError(
-                        'cloudright-create-error',
-                        'Please enter a valid email address.'
-                    );
-
-                    document.getElementById(
-                        'cloudright-create-email'
-                    ).focus();
-
-                    return;
-                }
-
-
-                setCloudRightButtonLoading(
-                    createButton,
-                    'Creating account...'
-                );
-
-
-                try {
-
-                    const response =
-                        await fetch(
-                            '/wp-json/cloudright/v1/create-account',
-                            {
-                                method: 'POST',
-
-                                credentials: 'include',
-
-                                headers: {
-                                    'Content-Type':
-                                        'application/json'
-                                },
-
-                                body: JSON.stringify({
-
-                                    first_name:
-                                        firstName,
-
-                                    last_name:
-                                        lastName,
-
-                                    email:
-                                        email
-
-                                })
-                            }
-                        );
-
-
-                    const result =
-                        await response.json();
-
-
-                    if (!response.ok || !result.success) {
-
-                        showCloudRightFormError(
-                            'cloudright-create-error',
-                            result.message ||
-                            'Unable to create your account.'
-                        );
-
-                        resetCloudRightButton(
-                            createButton,
-                            'Create Account',
-                            '→'
-                        );
-
-                        return;
-                    }
-
-
-                    cloudRightCustomer = {
-
-                        customer_id:
-                            result.customer_id,
-
-                        email:
-                            result.email,
-
-                        first_name:
-                            result.first_name || '',
-
-                        last_name:
-                            result.last_name || ''
-
-                    };
-
-
-                    openCloudRightModal(
-                        cart
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'CloudRight create account error:',
-                        error
-                    );
-
-
-                    showCloudRightFormError(
-                        'cloudright-create-error',
-                        'Unable to create your account right now.'
-                    );
-
-                } finally {
-
-                    if (
-                        !createButton.disabled
-                    ) {
-                        return;
-                    }
-
-                    resetCloudRightButton(
-                        createButton,
-                        'Create Account',
                         '→'
                     );
 
@@ -1941,8 +1515,15 @@
 
                     overlay.remove();
 
+                    /*
+                     * Keep the shared customer login.
+                     *
+                     * Do NOT clear localStorage here.
+                     * This allows My Account to remain logged in
+                     * after checkout.
+                     */
                     cloudRightCustomer =
-                        null;
+                        getStoredCloudRightCustomer();
 
 
                     if (result.order_received) {
@@ -2288,5 +1869,6 @@
             );
         }
     }
+
 
 })();
