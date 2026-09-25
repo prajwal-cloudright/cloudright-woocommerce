@@ -260,12 +260,32 @@ class CloudRight_API {
 	 * LOGIN
 	 * ---------------------------------------------------------------
 	 *
-	 * Checks whether a WooCommerce/WordPress customer exists
-	 * with the supplied email.
+	 * CloudRight uses email-only customer identification.
 	 *
-	 * No password is requested by the CloudRight UI.
+	 * If the email already exists:
+	 *     Use the existing customer.
+	 *
+	 * If the email does not exist:
+	 *     Automatically create a new WooCommerce customer.
+	 *
+	 * No password or OTP is requested.
 	 */
 	public function login( WP_REST_Request $request ) {
+
+		/**
+		 * Make sure WooCommerce is available.
+		 */
+		if ( ! function_exists( 'wc_create_new_customer' ) ) {
+
+			return new WP_Error(
+				'woocommerce_missing',
+				'WooCommerce is not available.',
+				array(
+					'status' => 500,
+				)
+			);
+		}
+
 
 		/**
 		 * Get request data.
@@ -314,7 +334,9 @@ class CloudRight_API {
 
 
 		/**
-		 * Find WordPress user by email.
+		 * -------------------------------------------------------
+		 * Check whether customer already exists.
+		 * -------------------------------------------------------
 		 */
 		$user = get_user_by(
 			'email',
@@ -323,39 +345,113 @@ class CloudRight_API {
 
 
 		/**
-		 * Account not found.
+		 * -------------------------------------------------------
+		 * Existing customer
+		 * -------------------------------------------------------
+		 *
+		 * If the customer already exists, simply return the
+		 * existing customer information.
 		 */
-		if ( ! $user ) {
+		if ( $user ) {
 
-			return new WP_Error(
-				'account_not_found',
-				'No account found with this email. Please create an account first.',
+			return rest_ensure_response(
 				array(
-					'status' => 404,
+					'success'     => true,
+					'message'     => 'Login successful.',
+					'customer_id' => $user->ID,
+					'email'       => $user->user_email,
+					'first_name'  => get_user_meta(
+						$user->ID,
+						'first_name',
+						true
+					),
+					'last_name'   => get_user_meta(
+						$user->ID,
+						'last_name',
+						true
+					),
+					'new_customer' => false,
 				)
 			);
 		}
 
 
 		/**
-		 * Return customer information.
+		 * -------------------------------------------------------
+		 * New customer
+		 * -------------------------------------------------------
+		 *
+		 * No account exists for this email.
+		 *
+		 * Automatically create a WooCommerce customer.
+		 *
+		 * The CloudRight UI does not ask the customer for a
+		 * password, first name, last name, or OTP.
+		 *
+		 * WooCommerce will generate the internal password.
+		 */
+		$customer_id = wc_create_new_customer(
+			$email,
+			'',
+			'',
+			array(
+				'first_name' => '',
+				'last_name'  => '',
+			)
+		);
+
+
+		/**
+		 * Check account creation result.
+		 */
+		if ( is_wp_error( $customer_id ) ) {
+
+			return new WP_Error(
+				'account_creation_failed',
+				$customer_id->get_error_message(),
+				array(
+					'status' => 400,
+				)
+			);
+		}
+
+
+		/**
+		 * Get newly created user.
+		 */
+		$user = get_user_by(
+			'id',
+			$customer_id
+		);
+
+
+		/**
+		 * Make sure the user was created correctly.
+		 */
+		if ( ! $user ) {
+
+			return new WP_Error(
+				'account_creation_failed',
+				'Customer account could not be created.',
+				array(
+					'status' => 500,
+				)
+			);
+		}
+
+
+		/**
+		 * Return newly created customer information.
 		 */
 		return rest_ensure_response(
 			array(
-				'success'     => true,
-				'message'     => 'Login successful.',
-				'customer_id' => $user->ID,
-				'email'       => $user->user_email,
-				'first_name'  => get_user_meta(
-					$user->ID,
-					'first_name',
-					true
-				),
-				'last_name'   => get_user_meta(
-					$user->ID,
-					'last_name',
-					true
-				),
+				'success'      => true,
+				'message'      => 'Account created and login successful.',
+				'customer_id'  => $user->ID,
+				'email'        => $user->user_email,
+				'first_name'   => '',
+				'last_name'    => '',
+				'new_customer' => true,
 			)
 		);
 	}
