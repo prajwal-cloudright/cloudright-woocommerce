@@ -1,4 +1,4 @@
-
+```yaml
 name: Build, Push and Deploy WooCommerce
 
 on:
@@ -96,6 +96,32 @@ jobs:
           DB_NAME=\$(printf '%s' "\$SECRET_JSON" | \
             python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
 
+          echo "Reading SES SMTP secret"
+
+          SES_SMTP_JSON=\$(aws secretsmanager get-secret-value \
+            --secret-id cloudright/woocommerce/ses-smtp \
+            --region $AWS_REGION \
+            --query SecretString \
+            --output text)
+
+          SMTP_HOST=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["host"])')
+
+          SMTP_PORT=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["port"])')
+
+          SMTP_USERNAME=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["username"])')
+
+          SMTP_PASSWORD=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
+
+          SMTP_FROM_EMAIL=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["from_email"])')
+
+          SMTP_FROM_NAME=\$(printf '%s' "\$SES_SMTP_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["from_name"])')
+
           echo "Reading WordPress authentication secret"
 
           WP_AUTH_JSON=\$(aws secretsmanager get-secret-value \
@@ -148,6 +174,12 @@ jobs:
             -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
             -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
             -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
+            -e CLOUDRIGHT_SMTP_HOST="\$SMTP_HOST" \
+            -e CLOUDRIGHT_SMTP_PORT="\$SMTP_PORT" \
+            -e CLOUDRIGHT_SMTP_USERNAME="\$SMTP_USERNAME" \
+            -e CLOUDRIGHT_SMTP_PASSWORD="\$SMTP_PASSWORD" \
+            -e CLOUDRIGHT_SMTP_FROM_EMAIL="\$SMTP_FROM_EMAIL" \
+            -e CLOUDRIGHT_SMTP_FROM_NAME="\$SMTP_FROM_NAME" \
             -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
@@ -187,6 +219,12 @@ jobs:
             -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
             -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
             -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
+            -e CLOUDRIGHT_SMTP_HOST="\$SMTP_HOST" \
+            -e CLOUDRIGHT_SMTP_PORT="\$SMTP_PORT" \
+            -e CLOUDRIGHT_SMTP_USERNAME="\$SMTP_USERNAME" \
+            -e CLOUDRIGHT_SMTP_PASSWORD="\$SMTP_PASSWORD" \
+            -e CLOUDRIGHT_SMTP_FROM_EMAIL="\$SMTP_FROM_EMAIL" \
+            -e CLOUDRIGHT_SMTP_FROM_NAME="\$SMTP_FROM_NAME" \
             -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
@@ -200,6 +238,14 @@ jobs:
           unset DB_USER
           unset DB_PASSWORD
           unset DB_NAME
+
+          unset SES_SMTP_JSON
+          unset SMTP_HOST
+          unset SMTP_PORT
+          unset SMTP_USERNAME
+          unset SMTP_PASSWORD
+          unset SMTP_FROM_EMAIL
+          unset SMTP_FROM_NAME
 
           unset WP_AUTH_JSON
           unset AUTH_KEY
@@ -272,4 +318,4 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
-
+```
