@@ -1162,12 +1162,6 @@ class CloudRight_API {
 			);
 		}
 
-		if ( isset( $email['WC_Email_Customer_Processing_Order'] ) ) {
-
-			$email['WC_Email_Customer_Processing_Order']->trigger(
-				$order->get_id()
-			);
-		}
 
 
 		/**
