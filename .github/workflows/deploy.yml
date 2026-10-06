@@ -92,8 +92,9 @@ jobs:
           DB_PASSWORD=\$(printf '%s' "\$SECRET_JSON" | \
             python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
 
-          DB_NAME=\$(printf '%s' "\$SECRET_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
+          DB_NAME="wordpress"
+
+          echo "Database configuration loaded"
 
           echo "Reading WordPress authentication secret"
 
@@ -271,4 +272,3 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
-
