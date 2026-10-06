@@ -10,9 +10,9 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-south-1
   ECR_REPOSITORY: cloudright-woocommerce
-  EC2_INSTANCE_ID: i-0a1b8aedd54049f01
+  EC2_INSTANCE_ID: i-0c34d673934facd97
 
 jobs:
   build-push-deploy:
@@ -25,7 +25,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::864899874068:role/GitHubActions-CloudRightWooCommerce
+          role-to-assume: arn:aws:iam::611990273456:role/cloudright-woocommerce-github-actions
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -60,7 +60,7 @@ jobs:
           DEPLOY_SCRIPT=$(cat <<SCRIPT
           set -e
 
-          echo "Starting deployment"
+          echo "Starting WooCommerce deployment"
           echo "Image: $IMAGE_URI"
 
           echo "Logging in to ECR"
@@ -95,32 +95,6 @@ jobs:
           DB_NAME=\$(printf '%s' "\$SECRET_JSON" | \
             python3 -c 'import sys,json; print(json.load(sys.stdin)["dbname"])')
 
-          echo "Reading SES SMTP secret"
-
-          SES_SMTP_JSON=\$(aws secretsmanager get-secret-value \
-            --secret-id cloudright/woocommerce/ses-smtp \
-            --region $AWS_REGION \
-            --query SecretString \
-            --output text)
-
-          SMTP_HOST=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["host"])')
-
-          SMTP_PORT=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["port"])')
-
-          SMTP_USERNAME=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["username"])')
-
-          SMTP_PASSWORD=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["password"])')
-
-          SMTP_FROM_EMAIL=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["from_email"])')
-
-          SMTP_FROM_NAME=\$(printf '%s' "\$SES_SMTP_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["from_name"])')
-
           echo "Reading WordPress authentication secret"
 
           WP_AUTH_JSON=\$(aws secretsmanager get-secret-value \
@@ -129,29 +103,29 @@ jobs:
             --query SecretString \
             --output text)
 
-          AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_KEY"])')
+          WORDPRESS_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_AUTH_KEY"])')
 
-          SECURE_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_KEY"])')
+          WORDPRESS_SECURE_AUTH_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_SECURE_AUTH_KEY"])')
 
-          LOGGED_IN_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_KEY"])')
+          WORDPRESS_LOGGED_IN_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_LOGGED_IN_KEY"])')
 
-          NONCE_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_KEY"])')
+          WORDPRESS_NONCE_KEY=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_NONCE_KEY"])')
 
-          AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["AUTH_SALT"])')
+          WORDPRESS_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_AUTH_SALT"])')
 
-          SECURE_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["SECURE_AUTH_SALT"])')
+          WORDPRESS_SECURE_AUTH_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_SECURE_AUTH_SALT"])')
 
-          LOGGED_IN_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["LOGGED_IN_SALT"])')
+          WORDPRESS_LOGGED_IN_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_LOGGED_IN_SALT"])')
 
-          NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
-            python3 -c 'import sys,json; print(json.load(sys.stdin)["NONCE_SALT"])')
+          WORDPRESS_NONCE_SALT=\$(printf '%s' "\$WP_AUTH_JSON" | \
+            python3 -c 'import sys,json; print(json.load(sys.stdin)["WORDPRESS_NONCE_SALT"])')
 
           echo "Starting temporary new container"
 
@@ -165,20 +139,14 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_AUTH_KEY="\$AUTH_KEY" \
-            -e WORDPRESS_SECURE_AUTH_KEY="\$SECURE_AUTH_KEY" \
-            -e WORDPRESS_LOGGED_IN_KEY="\$LOGGED_IN_KEY" \
-            -e WORDPRESS_NONCE_KEY="\$NONCE_KEY" \
-            -e WORDPRESS_AUTH_SALT="\$AUTH_SALT" \
-            -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
-            -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
-            -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
-            -e CLOUDRIGHT_SMTP_HOST="\$SMTP_HOST" \
-            -e CLOUDRIGHT_SMTP_PORT="\$SMTP_PORT" \
-            -e CLOUDRIGHT_SMTP_USERNAME="\$SMTP_USERNAME" \
-            -e CLOUDRIGHT_SMTP_PASSWORD="\$SMTP_PASSWORD" \
-            -e CLOUDRIGHT_SMTP_FROM_EMAIL="\$SMTP_FROM_EMAIL" \
-            -e CLOUDRIGHT_SMTP_FROM_NAME="\$SMTP_FROM_NAME" \
+            -e WORDPRESS_AUTH_KEY="\$WORDPRESS_AUTH_KEY" \
+            -e WORDPRESS_SECURE_AUTH_KEY="\$WORDPRESS_SECURE_AUTH_KEY" \
+            -e WORDPRESS_LOGGED_IN_KEY="\$WORDPRESS_LOGGED_IN_KEY" \
+            -e WORDPRESS_NONCE_KEY="\$WORDPRESS_NONCE_KEY" \
+            -e WORDPRESS_AUTH_SALT="\$WORDPRESS_AUTH_SALT" \
+            -e WORDPRESS_SECURE_AUTH_SALT="\$WORDPRESS_SECURE_AUTH_SALT" \
+            -e WORDPRESS_LOGGED_IN_SALT="\$WORDPRESS_LOGGED_IN_SALT" \
+            -e WORDPRESS_NONCE_SALT="\$WORDPRESS_NONCE_SALT" \
             -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
@@ -190,7 +158,7 @@ jobs:
           echo "Checking new container"
 
           curl -f -s \
-            -H 'Host: glomore.in' \
+            -H 'Host: woocommerce.cloudright.in' \
             -H 'X-Forwarded-Proto: https' \
             http://127.0.0.1:8081/wp-json/ > /dev/null
 
@@ -210,20 +178,14 @@ jobs:
             -e WORDPRESS_DB_USER="\$DB_USER" \
             -e WORDPRESS_DB_PASSWORD="\$DB_PASSWORD" \
             -e WORDPRESS_DB_NAME="\$DB_NAME" \
-            -e WORDPRESS_AUTH_KEY="\$AUTH_KEY" \
-            -e WORDPRESS_SECURE_AUTH_KEY="\$SECURE_AUTH_KEY" \
-            -e WORDPRESS_LOGGED_IN_KEY="\$LOGGED_IN_KEY" \
-            -e WORDPRESS_NONCE_KEY="\$NONCE_KEY" \
-            -e WORDPRESS_AUTH_SALT="\$AUTH_SALT" \
-            -e WORDPRESS_SECURE_AUTH_SALT="\$SECURE_AUTH_SALT" \
-            -e WORDPRESS_LOGGED_IN_SALT="\$LOGGED_IN_SALT" \
-            -e WORDPRESS_NONCE_SALT="\$NONCE_SALT" \
-            -e CLOUDRIGHT_SMTP_HOST="\$SMTP_HOST" \
-            -e CLOUDRIGHT_SMTP_PORT="\$SMTP_PORT" \
-            -e CLOUDRIGHT_SMTP_USERNAME="\$SMTP_USERNAME" \
-            -e CLOUDRIGHT_SMTP_PASSWORD="\$SMTP_PASSWORD" \
-            -e CLOUDRIGHT_SMTP_FROM_EMAIL="\$SMTP_FROM_EMAIL" \
-            -e CLOUDRIGHT_SMTP_FROM_NAME="\$SMTP_FROM_NAME" \
+            -e WORDPRESS_AUTH_KEY="\$WORDPRESS_AUTH_KEY" \
+            -e WORDPRESS_SECURE_AUTH_KEY="\$WORDPRESS_SECURE_AUTH_KEY" \
+            -e WORDPRESS_LOGGED_IN_KEY="\$WORDPRESS_LOGGED_IN_KEY" \
+            -e WORDPRESS_NONCE_KEY="\$WORDPRESS_NONCE_KEY" \
+            -e WORDPRESS_AUTH_SALT="\$WORDPRESS_AUTH_SALT" \
+            -e WORDPRESS_SECURE_AUTH_SALT="\$WORDPRESS_SECURE_AUTH_SALT" \
+            -e WORDPRESS_LOGGED_IN_SALT="\$WORDPRESS_LOGGED_IN_SALT" \
+            -e WORDPRESS_NONCE_SALT="\$WORDPRESS_NONCE_SALT" \
             -e WORDPRESS_CONFIG_EXTRA='if (isset(\$_SERVER["HTTP_X_FORWARDED_PROTO"]) && strpos(\$_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false) { \$_SERVER["HTTPS"] = "on"; }' \
             -v cloudright_woocommerce_uploads:/var/www/html/wp-content/uploads \
             "$IMAGE_URI"
@@ -238,23 +200,15 @@ jobs:
           unset DB_PASSWORD
           unset DB_NAME
 
-          unset SES_SMTP_JSON
-          unset SMTP_HOST
-          unset SMTP_PORT
-          unset SMTP_USERNAME
-          unset SMTP_PASSWORD
-          unset SMTP_FROM_EMAIL
-          unset SMTP_FROM_NAME
-
           unset WP_AUTH_JSON
-          unset AUTH_KEY
-          unset SECURE_AUTH_KEY
-          unset LOGGED_IN_KEY
-          unset NONCE_KEY
-          unset AUTH_SALT
-          unset SECURE_AUTH_SALT
-          unset LOGGED_IN_SALT
-          unset NONCE_SALT
+          unset WORDPRESS_AUTH_KEY
+          unset WORDPRESS_SECURE_AUTH_KEY
+          unset WORDPRESS_LOGGED_IN_KEY
+          unset WORDPRESS_NONCE_KEY
+          unset WORDPRESS_AUTH_SALT
+          unset WORDPRESS_SECURE_AUTH_SALT
+          unset WORDPRESS_LOGGED_IN_SALT
+          unset WORDPRESS_NONCE_SALT
 
           echo "Deployment completed successfully"
           SCRIPT
@@ -317,3 +271,4 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
+
